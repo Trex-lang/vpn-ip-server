@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN IP Server - Bitcoin Payment</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-shield-alt"></i> VPN IP Server</h1>
+            <p>Secure IP addresses with Bitcoin payments</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav" id="nav">
+            <button class="nav-btn active" data-section="intro">Home</button>
+            <button class="nav-btn" data-section="login">Login</button>
+            <button class="nav-btn" data-section="signup">Sign Up</button>
+            <button class="nav-btn" data-section="locations">Locations</button>
+            <button class="nav-btn" data-section="payment">Payment</button>
+            <button class="nav-btn" data-section="my-ips">My IPs</button>
+            <button class="nav-btn" data-section="status">Payment Status</button>
+            <button class="nav-btn" data-section="profile">Profile</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Intro Section -->
+            <section id="intro" class="section active">
+                <div class="intro-content">
+                    <h2>Welcome to VPN IP Server</h2>
+                    <p>
+                        Instantly purchase and manage IP addresses from 50+ global locations.<br>
+                        Pay securely with Bitcoin. Each IP lasts for 1 month per payment.<br>
+                        Register or log in to get started!
+                    </p>
+                </div>
+            </section>
+            <!-- Login Section -->
+            <section id="login" class="section">
+                <div class="auth-form">
+                    <h2>Login</h2>
+                    <form id="loginForm">
+                        <input type="text" id="loginUsername" placeholder="Username" required>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                    <div id="loginStatus" class="status-message"></div>
+                </div>
+            </section>
+            <!-- Sign Up Section -->
+            <section id="signup" class="section">
+                <div class="auth-form">
+                    <h2>Sign Up</h2>
+                    <form id="registerForm">
+                        <input type="text" id="regUsername" placeholder="Username" required>
+                        <input type="email" id="regEmail" placeholder="Email" required>
+                        <input type="password" id="regPassword" placeholder="Password" required>
+                        <button type="submit">Register</button>
+                    </form>
+                    <div id="registerStatus" class="status-message"></div>
+                </div>
+            </section>
+            <!-- Locations Section -->
+            <section id="locations" class="section">
+                <h2>Available Locations</h2>
+                <div class="locations-grid" id="locationsGrid">
+                    <div class="loading">Loading locations...</div>
+                </div>
+            </section>
+
+            <!-- Payment Section -->
+            <section id="payment" class="section">
+                <h2>Purchase IP Address</h2>
+                <form id="paymentForm">
+                    <select id="paymentLocation" required>
+                        <option value="">Select Location</option>
+                    </select>
+                    <select id="paymentDuration" required>
+                        <option value="1">1 Month</option>
+                        <option value="3">3 Months</option>
+                        <option value="6">6 Months</option>
+                        <option value="12">12 Months</option>
+                    </select>
+                    <button type="submit">Create Payment</button>
+                </form>
+                <div id="paymentResult" class="payment-result"></div>
+            </section>
+
+            <!-- My IPs Section -->
+            <section id="my-ips" class="section">
+                <h2>My Allocated IPs</h2>
+                <div id="myIPsList" class="ips-list">
+                    <div class="loading">Loading your IPs...</div>
+                </div>
+            </section>
+
+            <!-- Payment Status Section -->
+            <section id="status" class="section">
+                <h2>Payment Status</h2>
+                <form id="statusForm">
+                    <input type="text" id="paymentId" placeholder="Payment ID" required>
+                    <button type="submit">Check Status</button>
+                </form>
+                <div id="statusResult" class="status-result"></div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="section">
+                <h2>My Profile</h2>
+                <div id="profileInfo" class="profile-info loading">Loading profile...</div>
+                
+                <!-- Email Update Statement -->
+                <div class="profile-action" id="emailAction">
+                    <div class="action-statement">
+                        <i class="fas fa-envelope"></i>
+                        <span>Update Email Address</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <form id="editEmailForm" class="profile-form hidden">
+                        <input type="email" id="editEmail" placeholder="New Email" required>
+                        <button type="submit">Update Email</button>
+                        <div id="editEmailStatus" class="status-message"></div>
+                    </form>
+                </div>
+
+                <!-- Password Change Statement -->
+                <div class="profile-action" id="passwordAction">
+                    <div class="action-statement">
+                        <i class="fas fa-lock"></i>
+                        <span>Change Password</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <form id="changePasswordForm" class="profile-form hidden">
+                        <input type="password" id="currentPassword" placeholder="Current Password" required>
+                        <input type="password" id="newPassword" placeholder="New Password" required>
+                        <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required>
+                        <button type="submit">Change Password</button>
+                        <div id="changePasswordStatus" class="status-message"></div>
+                    </form>
+                </div>
+
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 VPN IP Server. Powered by Bitcoin payments.</p>
+        </footer>
+    </div>
+
+    <!-- Modal for QR Code -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Bitcoin Payment QR Code</h3>
+            <div id="qrCodeContainer"></div>
+            <div id="paymentDetails"></div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Dialog -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content confirm-modal">
+            <div class="confirm-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure you want to proceed?</p>
+            <div class="confirm-buttons">
+                <button id="confirmYes" class="btn-primary">Yes, Continue</button>
+                <button id="confirmNo" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
