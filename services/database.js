@@ -1,7 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const logger = require('./logger');
 
 class DatabaseService {
   constructor() {
@@ -14,10 +13,10 @@ class DatabaseService {
     return new Promise((resolve, reject) => {
       this.db = new sqlite3.Database(dbPath, (err) => {
         if (err) {
-          logger.error('Error opening database:', err);
+          console.error('Error opening database:', err);
           reject(err);
         } else {
-          logger.info('Database connected successfully');
+          console.log('Database connected successfully');
           this.createTables()
             .then(resolve)
             .catch(reject);
@@ -95,7 +94,7 @@ class DatabaseService {
     // Initialize IP address pool if empty
     await this.initializeIPPool();
     
-    logger.info('Database tables created successfully');
+    console.log('Database tables created successfully');
   }
 
   async initializeIPPool() {
@@ -131,7 +130,7 @@ class DatabaseService {
         );
       }
       
-      logger.info(`Initialized IP pool with ${ipRange.length} addresses`);
+      console.log(`Initialized IP pool with ${ipRange.length} addresses`);
     }
   }
 
@@ -152,7 +151,7 @@ class DatabaseService {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, function(err) {
         if (err) {
-          logger.error('Database run error:', err);
+          console.error('Database run error:', err);
           reject(err);
         } else {
           resolve({ id: this.lastID, changes: this.changes });
@@ -165,7 +164,7 @@ class DatabaseService {
     return new Promise((resolve, reject) => {
       this.db.get(sql, params, (err, row) => {
         if (err) {
-          logger.error('Database get error:', err);
+          console.error('Database get error:', err);
           reject(err);
         } else {
           resolve(row);
@@ -178,7 +177,7 @@ class DatabaseService {
     return new Promise((resolve, reject) => {
       this.db.all(sql, params, (err, rows) => {
         if (err) {
-          logger.error('Database all error:', err);
+          console.error('Database all error:', err);
           reject(err);
         } else {
           resolve(rows);

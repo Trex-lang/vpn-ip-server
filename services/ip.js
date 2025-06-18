@@ -1,10 +1,10 @@
-const logger = require('./logger');
 const DatabaseService = require('./database');
 
 class IPService {
   constructor() {
     this.isInitialized = false;
     this.vpnConfigs = new Map();
+    this.db = DatabaseService;
   }
 
   async initialize() {
@@ -12,9 +12,9 @@ class IPService {
       // Initialize VPN configurations for different locations
       await this.initializeVPNConfigs();
       this.isInitialized = true;
-      logger.info('IP service initialized successfully');
+      console.log('IP service initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize IP service:', error);
+      console.error('Failed to initialize IP service:', error);
       throw error;
     }
   }
@@ -51,7 +51,7 @@ class IPService {
       });
     }
 
-    logger.info(`Initialized ${this.vpnConfigs.size} VPN configurations`);
+    console.log(`Initialized ${this.vpnConfigs.size} VPN configurations`);
   }
 
   async generateVPNConfig(location) {
@@ -83,7 +83,7 @@ class IPService {
       }
 
       // Get available IP addresses for the requested location
-      const availableIPs = await DatabaseService.getAvailableIPs();
+      const availableIPs = await this.db.getAvailableIPs();
       const locationIPs = availableIPs.filter(ip => ip.location === location);
 
       if (locationIPs.length === 0) {
@@ -94,12 +94,12 @@ class IPService {
       const selectedIP = locationIPs[0];
 
       // Allocate the IP address
-      await DatabaseService.allocateIP(selectedIP.id, userId, durationMonths);
+      await this.db.allocateIP(selectedIP.id, userId, durationMonths);
 
       // Generate VPN configuration for the user
       const vpnConfig = await this.generateUserVPNConfig(selectedIP, userId);
 
-      logger.info(`Allocated IP ${selectedIP.ip_address} to user ${userId} for location ${location}`);
+      console.log(`Allocated IP ${selectedIP.ip_address} to user ${userId} for location ${location}`);
 
       return {
         ipAddress: selectedIP.ip_address,
@@ -108,7 +108,7 @@ class IPService {
         vpnConfig: vpnConfig
       };
     } catch (error) {
-      logger.error('Error allocating IP address:', error);
+      console.error('Error allocating IP address:', error);
       throw error;
     }
   }
@@ -161,7 +161,7 @@ class IPService {
         }
       };
     } catch (error) {
-      logger.error('Error generating user VPN config:', error);
+      console.error('Error generating user VPN config:', error);
       throw error;
     }
   }
@@ -169,7 +169,7 @@ class IPService {
   async saveUserCredentials(userId, username, password) {
     // This would save credentials to a secure database
     // For now, we'll just log them (in production, use proper encryption)
-    logger.info(`Generated credentials for user ${userId}: ${username}`);
+    console.log(`Generated credentials for user ${userId}: ${username}`);
   }
 
   generateSecurePassword(length = 16) {
@@ -188,34 +188,34 @@ class IPService {
       }
 
       // Get IP address details before deallocation
-      const ipAddress = await DatabaseService.get(`SELECT * FROM ip_addresses WHERE id = ?`, [ipId]);
+      const ipAddress = await this.db.get(`SELECT * FROM ip_addresses WHERE id = ?`, [ipId]);
       
       if (!ipAddress) {
         throw new Error(`IP address with ID ${ipId} not found`);
       }
 
       // Deallocate the IP address
-      await DatabaseService.deallocateIP(ipId);
+      await this.db.deallocateIP(ipId);
 
       // Clean up user credentials
       await this.cleanupUserCredentials(ipAddress.allocated_to_user_id);
 
-      logger.info(`Deallocated IP ${ipAddress.ip_address}`);
+      console.log(`Deallocated IP ${ipAddress.ip_address}`);
       return true;
     } catch (error) {
-      logger.error('Error deallocating IP address:', error);
+      console.error('Error deallocating IP address:', error);
       throw error;
     }
   }
 
   async cleanupUserCredentials(userId) {
     // This would remove user credentials from the database
-    logger.info(`Cleaned up credentials for user ${userId}`);
+    console.log(`Cleaned up credentials for user ${userId}`);
   }
 
   async getUserIPAddresses(userId) {
     try {
-      const userIPs = await DatabaseService.getUserIPs(userId);
+      const userIPs = await this.db.getUserIPs(userId);
       
       const result = await Promise.all(userIPs.map(async (ip) => {
         const vpnConfig = await this.generateUserVPNConfig(ip, userId);
@@ -231,14 +231,14 @@ class IPService {
 
       return result;
     } catch (error) {
-      logger.error('Error getting user IP addresses:', error);
+      console.error('Error getting user IP addresses:', error);
       throw error;
     }
   }
 
   async getAvailableLocations() {
     try {
-      const availableIPs = await DatabaseService.getAvailableIPs();
+      const availableIPs = await this.db.getAvailableIPs();
       const locations = [...new Set(availableIPs.map(ip => ip.location))];
       
       return locations.map(location => ({
@@ -246,14 +246,14 @@ class IPService {
         availableIPs: availableIPs.filter(ip => ip.location === location).length
       }));
     } catch (error) {
-      logger.error('Error getting available locations:', error);
+      console.error('Error getting available locations:', error);
       throw error;
     }
   }
 
   async getAllocatedIPs() {
     try {
-      const allocatedIPs = await DatabaseService.getAllocatedIPs();
+      const allocatedIPs = await this.db.getAllocatedIPs();
       
       return allocatedIPs.map(ip => ({
         id: ip.id,
@@ -265,7 +265,7 @@ class IPService {
         expiresAt: ip.expires_at
       }));
     } catch (error) {
-      logger.error('Error getting allocated IPs:', error);
+      console.error('Error getting allocated IPs:', error);
       throw error;
     }
   }

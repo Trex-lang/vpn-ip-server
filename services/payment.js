@@ -1,38 +1,38 @@
-const logger = require('./logger');
 const DatabaseService = require('./database');
 const BitcoinService = require('./bitcoin');
 const IPService = require('./ip');
-const cron = require('node-cron');
+const QRCode = require('qrcode');
 
 class PaymentService {
   constructor() {
     this.isInitialized = false;
     this.paymentMonitorInterval = null;
+    this.db = DatabaseService;
+    this.bitcoin = BitcoinService;
   }
 
   async initialize() {
     try {
-      // Start payment monitoring
       this.startPaymentMonitoring();
       this.isInitialized = true;
-      logger.info('Payment service initialized successfully');
+      console.log('Payment service initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize Payment service:', error);
+      console.error('Failed to initialize Payment service:', error);
       throw error;
     }
   }
 
   startPaymentMonitoring() {
-    // Monitor pending payments every 5 minutes
-    cron.schedule('*/5 * * * *', async () => {
+    // Check payments every 30 seconds
+    this.paymentMonitorInterval = setInterval(async () => {
       try {
         await this.checkPendingPayments();
       } catch (error) {
-        logger.error('Error in payment monitoring:', error);
+        console.error('Error in payment monitoring:', error);
       }
-    });
+    }, 30000);
 
-    logger.info('Payment monitoring started');
+    console.log('Payment monitoring started');
   }
 
   async createPayment(userId, location, durationMonths = 1) {
@@ -67,7 +67,7 @@ class PaymentService {
       // Get current Bitcoin price for display
       const btcPrice = await BitcoinService.getCurrentPrice();
 
-      logger.info(`Created payment ${paymentId} for user ${userId}, amount: ${totalAmount} BTC`);
+      console.log(`Created payment ${paymentId} for user ${userId}, amount: ${totalAmount} BTC`);
 
       return {
         paymentId: paymentId,
@@ -80,19 +80,18 @@ class PaymentService {
         qrCode: await this.generateQRCode(bitcoinAddress, totalAmount)
       };
     } catch (error) {
-      logger.error('Error creating payment:', error);
+      console.error('Error creating payment:', error);
       throw error;
     }
   }
 
   async generateQRCode(address, amount) {
     try {
-      const QRCode = require('qrcode');
       const bitcoinURI = `bitcoin:${address}?amount=${amount}`;
       const qrCodeDataURL = await QRCode.toDataURL(bitcoinURI);
       return qrCodeDataURL;
     } catch (error) {
-      logger.error('Error generating QR code:', error);
+      console.error('Error generating QR code:', error);
       return null;
     }
   }
@@ -100,13 +99,13 @@ class PaymentService {
   async checkPendingPayments() {
     try {
       const pendingPayments = await DatabaseService.getPendingPayments();
-      logger.info(`Checking ${pendingPayments.length} pending payments`);
+      console.log(`Checking ${pendingPayments.length} pending payments`);
 
       for (const payment of pendingPayments) {
         await this.checkPaymentStatus(payment);
       }
     } catch (error) {
-      logger.error('Error checking pending payments:', error);
+      console.error('Error checking pending payments:', error);
     }
   }
 
@@ -126,7 +125,7 @@ class PaymentService {
       try {
         balance = await BitcoinService.getAddressBalance(payment.bitcoin_address);
       } catch (error) {
-        logger.warn(`Could not get balance for address ${payment.bitcoin_address}:`, error.message);
+        console.warn(`Could not get balance for address ${payment.bitcoin_address}:`, error.message);
         // In test mode, simulate payment after 30 seconds
         if (paymentAge > 30000) { // 30 seconds
           const mockTxid = `mock_txid_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
@@ -149,7 +148,7 @@ class PaymentService {
         }
       }
     } catch (error) {
-      logger.error(`Error checking payment status for payment ${payment.id}:`, error);
+      console.error(`Error checking payment status for payment ${payment.id}:`, error);
     }
   }
 
@@ -168,7 +167,7 @@ class PaymentService {
         1 // 1 month duration
       );
 
-      logger.info(`Payment ${paymentId} confirmed, IP ${allocation.ipAddress} allocated to user ${payment.user_id}`);
+      console.log(`Payment ${paymentId} confirmed, IP ${allocation.ipAddress} allocated to user ${payment.user_id}`);
 
       // Log admin action
       await DatabaseService.logAdminAction(
@@ -184,7 +183,7 @@ class PaymentService {
         allocation: allocation
       };
     } catch (error) {
-      logger.error(`Error confirming payment ${paymentId}:`, error);
+      console.error(`Error confirming payment ${paymentId}:`, error);
       throw error;
     }
   }
@@ -192,9 +191,9 @@ class PaymentService {
   async expirePayment(paymentId) {
     try {
       await DatabaseService.updatePaymentStatus(paymentId, 'expired');
-      logger.info(`Payment ${paymentId} expired`);
+      console.log(`Payment ${paymentId} expired`);
     } catch (error) {
-      logger.error(`Error expiring payment ${paymentId}:`, error);
+      console.error(`Error expiring payment ${paymentId}:`, error);
     }
   }
 
@@ -211,7 +210,7 @@ class PaymentService {
       try {
         currentBalance = await BitcoinService.getAddressBalance(payment.bitcoin_address);
       } catch (error) {
-        logger.warn(`Could not get balance for address ${payment.bitcoin_address}:`, error.message);
+        console.warn(`Could not get balance for address ${payment.bitcoin_address}:`, error.message);
       }
 
       // Calculate time remaining
@@ -234,7 +233,7 @@ class PaymentService {
         username: payment.username
       };
     } catch (error) {
-      logger.error(`Error getting payment status for ${paymentId}:`, error);
+      console.error(`Error getting payment status for ${paymentId}:`, error);
       throw error;
     }
   }
@@ -258,7 +257,7 @@ class PaymentService {
         location: payment.location
       }));
     } catch (error) {
-      logger.error(`Error getting payments for user ${userId}:`, error);
+      console.error(`Error getting payments for user ${userId}:`, error);
       throw error;
     }
   }
