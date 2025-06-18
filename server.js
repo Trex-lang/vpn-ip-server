@@ -4,16 +4,10 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-// Import routes and services
+// Import routes
 const authRoutes = require('./routes/auth');
 const paymentRoutes = require('./routes/payment');
 const ipRoutes = require('./routes/ip');
-
-// Import services
-const DatabaseService = require('./services/database');
-const BitcoinService = require('./services/bitcoin');
-const IPService = require('./services/ip');
-const PaymentService = require('./services/payment');
 
 // Create Express app
 const app = express();
@@ -55,13 +49,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Health check endpoint
+// Health check endpoint - SIMPLIFIED
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    message: 'VPN IP Server is running'
   });
 });
 
@@ -89,35 +84,8 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Initialize services
-async function initializeServices() {
-  try {
-    // Initialize database
-    await DatabaseService.initialize();
-    console.log('Database initialized successfully');
-
-    // Initialize Bitcoin service
-    await BitcoinService.initialize();
-    console.log('Bitcoin service initialized successfully');
-
-    // Initialize IP service
-    await IPService.initialize();
-    console.log('IP service initialized successfully');
-
-    // Initialize Payment service
-    await PaymentService.initialize();
-    console.log('Payment service initialized successfully');
-
-  } catch (error) {
-    console.error('Failed to initialize services:', error);
-    process.exit(1);
-  }
-}
-
-// Start server
-async function startServer() {
-  await initializeServices();
-  
+// Start server - SIMPLIFIED
+function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`VPN IP Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -147,5 +115,5 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-// Start the server
+// Start the server immediately
 startServer(); 
